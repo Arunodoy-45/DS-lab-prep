@@ -1,0 +1,536 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.top-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.25rem}
+.tab-btn{padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;cursor:pointer;font-size:13px;color:var(--color-text-secondary)}
+.tab-btn.active{background:var(--color-background-secondary);color:var(--color-text-primary);font-weight:500}
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:1.25rem}
+.topic-card{padding:10px 14px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);cursor:pointer;transition:border-color 0.15s}
+.topic-card:hover{border-color:var(--color-border-primary)}
+.topic-card.selected{border:1.5px solid #378ADD;background:var(--color-background-info)}
+.topic-num{font-size:11px;color:var(--color-text-secondary);margin-bottom:2px}
+.topic-name{font-size:13px;color:var(--color-text-primary);font-weight:500}
+.detail-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:1rem}
+.detail-title{font-size:16px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)}
+.sub-label{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;margin-top:14px}
+.code-block{background:var(--color-background-tertiary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:var(--color-text-primary);white-space:pre;overflow-x:auto;max-height:340px;overflow-y:auto}
+.algo-list{list-style:none;counter-reset:step}
+.algo-list li{counter-increment:step;display:flex;gap:8px;padding:5px 0;font-size:13px;color:var(--color-text-primary);border-bottom:0.5px solid var(--color-border-tertiary)}
+.algo-list li:last-child{border-bottom:none}
+.algo-list li::before{content:counter(step);min-width:20px;height:20px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px}
+.quiz-q{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:8px;font-size:13px;color:var(--color-text-primary)}
+.quiz-q strong{font-weight:500}
+.quiz-a{font-size:13px;color:var(--color-text-secondary);margin-top:4px;display:none}
+.quiz-q.open .quiz-a{display:block}
+.quiz-q .q-text{cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.badge{display:inline-block;padding:2px 8px;border-radius:var(--border-radius-md);font-size:11px;font-weight:500}
+.badge-blue{background:var(--color-background-info);color:var(--color-text-info)}
+.badge-green{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-amber{background:var(--color-background-warning);color:var(--color-text-warning)}
+.random-btn{padding:8px 18px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);cursor:pointer;font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:1rem}
+.random-btn:hover{background:var(--color-background-tertiary)}
+.hint{font-size:12px;color:var(--color-text-secondary);margin-bottom:1rem}
+</style>
+<div class="wrap">
+<h2 class="sr-only">DS Lab Final Prep — All 15 programs with code, algorithms, and quiz Q&A</h2>
+
+<div class="top-bar">
+  <button class="tab-btn active" onclick="switchTab('code')">Code</button>
+  <button class="tab-btn" onclick="switchTab('algo')">Algorithm</button>
+  <button class="tab-btn" onclick="switchTab('quiz')">Quiz Q&A</button>
+  <button class="random-btn" onclick="pickRandom()">🎲 Simulate random pick</button>
+</div>
+
+<p class="hint">Click any topic below to see its details</p>
+
+<div class="topic-grid" id="grid"></div>
+<div id="detail"></div>
+</div>
+
+<script>
+const topics = [
+  {
+    num:1, name:"Max & Min in array",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Initialise max=arr[0], min=arr[0]","Loop i from 1 to n-1","If arr[i] > max, set max=arr[i]","If arr[i] < min, set min=arr[i]","Print max and min"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n;
+    cout<<"Enter size: ";
+    cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    int mx=arr[0], mn=arr[0];
+    for(int i=1;i<n;i++){
+        if(arr[i]>mx) mx=arr[i];
+        if(arr[i]<mn) mn=arr[i];
+    }
+    cout<<"Max: "<<mx<<" Min: "<<mn;
+}`,
+    quiz:[
+      {q:"What is the time complexity?", a:"O(n) — we traverse the array once."},
+      {q:"What is the space complexity?", a:"O(1) — only two extra variables (max, min)."},
+      {q:"What if the array has all equal elements?", a:"max and min will both equal that single value."},
+    ]
+  },
+  {
+    num:2, name:"Binary Search",
+    badge:"search", badgeClass:"badge-blue",
+    algo:["Set low=0, high=n-1","While low <= high, find mid=(low+high)/2","If arr[mid]==target, return mid","If arr[mid]<target, set low=mid+1","Else set high=mid-1","If not found, return -1"],
+    code:`#include<iostream>
+using namespace std;
+int binarySearch(int arr[],int n,int key){
+    int low=0,high=n-1;
+    while(low<=high){
+        int mid=(low+high)/2;
+        if(arr[mid]==key) return mid;
+        else if(arr[mid]<key) low=mid+1;
+        else high=mid-1;
+    }
+    return -1;
+}
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    int key; cin>>key;
+    int res=binarySearch(arr,n,key);
+    if(res!=-1) cout<<"Found at index "<<res;
+    else cout<<"Not found";
+}`,
+    quiz:[
+      {q:"What is the prerequisite for binary search?", a:"The array must be sorted."},
+      {q:"Time complexity of binary search?", a:"O(log n) — the search space halves each step."},
+      {q:"How does binary search differ from linear search?", a:"Binary search divides and conquers (O log n); linear search checks every element (O n)."},
+    ]
+  },
+  {
+    num:3, name:"Insert element into array",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Input array, size n, element to insert, position pos","Shift all elements from index n-1 down to pos one step right","Place new element at arr[pos]","Increment size by 1","Print new array"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n,pos,val;
+    cin>>n;
+    int arr[n+1];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    cout<<"Position and value: ";
+    cin>>pos>>val;
+    for(int i=n;i>pos;i--) arr[i]=arr[i-1];
+    arr[pos]=val;
+    n++;
+    for(int i=0;i<n;i++) cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"Why do we shift elements right before inserting?", a:"To make room at the target position without overwriting existing data."},
+      {q:"What is the worst-case time complexity of insertion?", a:"O(n) — inserting at index 0 shifts all n elements."},
+      {q:"What is the best case?", a:"O(1) — inserting at the end requires no shifting."},
+    ]
+  },
+  {
+    num:4, name:"Delete element from array",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Input array, size n, element or position to delete","Find the index of the element (if searching by value)","Shift all elements after that index one step left","Decrement size by 1","Print new array"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    int pos; cin>>pos;
+    for(int i=pos;i<n-1;i++) arr[i]=arr[i+1];
+    n--;
+    for(int i=0;i<n;i++) cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"What is the time complexity of deletion?", a:"O(n) in the worst case — deleting from index 0 shifts all remaining elements."},
+      {q:"What happens to the last slot after deletion?", a:"It's logically ignored (size is decremented), though physically the value still sits there."},
+      {q:"Difference between delete by value vs delete by index?", a:"Delete by index is direct. Delete by value first requires a linear search O(n) to find the index."},
+    ]
+  },
+  {
+    num:5, name:"Merge two arrays",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Input array A of size m and array B of size n","Create array C of size m+n","Copy all elements of A into C","Copy all elements of B after A in C","Print C"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int m,n;
+    cin>>m>>n;
+    int a[m],b[n],c[m+n];
+    for(int i=0;i<m;i++) cin>>a[i];
+    for(int i=0;i<n;i++) cin>>b[i];
+    int k=0;
+    for(int i=0;i<m;i++) c[k++]=a[i];
+    for(int i=0;i<n;i++) c[k++]=b[i];
+    for(int i=0;i<m+n;i++) cout<<c[i]<<" ";
+}`,
+    quiz:[
+      {q:"Time complexity of merging two arrays?", a:"O(m+n) — we visit every element of both arrays exactly once."},
+      {q:"How would you merge two sorted arrays into a sorted array?", a:"Use two pointers, one per array. Compare elements and pick the smaller one into C, advancing that pointer. Continue until one array is exhausted, then copy the rest."},
+    ]
+  },
+  {
+    num:6, name:"Find duplicate elements",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Use two nested loops (brute force)","Outer loop i from 0 to n-1","Inner loop j from i+1 to n-1","If arr[i]==arr[j], print arr[i] as duplicate","Continue until all pairs checked"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    cout<<"Duplicates: ";
+    for(int i=0;i<n-1;i++)
+        for(int j=i+1;j<n;j++)
+            if(arr[i]==arr[j])
+                cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"Time complexity of the brute-force duplicate approach?", a:"O(n²) due to nested loops."},
+      {q:"What is a more efficient approach?", a:"Use a hash set/frequency array — mark elements as seen, flag repeats in O(n) time."},
+    ]
+  },
+  {
+    num:7, name:"Bubble Sort",
+    badge:"sort", badgeClass:"badge-green",
+    algo:["Repeat n-1 passes","In each pass, compare adjacent elements arr[j] and arr[j+1]","If arr[j] > arr[j+1], swap them","After each pass the largest unsorted element 'bubbles' to its correct position","Stop when no swaps in a pass (optional optimisation)"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    for(int i=0;i<n-1;i++)
+        for(int j=0;j<n-i-1;j++)
+            if(arr[j]>arr[j+1])
+                swap(arr[j],arr[j+1]);
+    for(int i=0;i<n;i++) cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"Time complexity of bubble sort?", a:"Worst/average: O(n²). Best case (already sorted with flag): O(n)."},
+      {q:"Is bubble sort stable?", a:"Yes — equal elements retain their relative order."},
+      {q:"Why is it called bubble sort?", a:"Larger elements gradually 'bubble up' to their correct position at the end of the array with each pass."},
+    ]
+  },
+  {
+    num:8, name:"Selection Sort",
+    badge:"sort", badgeClass:"badge-green",
+    algo:["Divide array into sorted (left) and unsorted (right) portions","For each position i from 0 to n-2","Find the minimum element in the unsorted portion","Swap it with the element at position i","Repeat until all elements are sorted"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    for(int i=0;i<n-1;i++){
+        int minIdx=i;
+        for(int j=i+1;j<n;j++)
+            if(arr[j]<arr[minIdx]) minIdx=j;
+        swap(arr[i],arr[minIdx]);
+    }
+    for(int i=0;i<n;i++) cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"Time complexity of selection sort?", a:"O(n²) in all cases — we always scan the unsorted portion regardless."},
+      {q:"Is selection sort stable?", a:"No — swapping can change the relative order of equal elements."},
+      {q:"Key difference from bubble sort?", a:"Selection sort makes at most n-1 swaps (one per pass), while bubble sort can make many more — making selection sort better when swaps are costly."},
+    ]
+  },
+  {
+    num:9, name:"Insertion Sort",
+    badge:"sort", badgeClass:"badge-green",
+    algo:["Start from index 1","Pick current element as 'key'","Compare key with elements to its left","Shift each larger element one position right","Insert key at the correct position","Repeat for all elements"],
+    code:`#include<iostream>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    for(int i=1;i<n;i++){
+        int key=arr[i], j=i-1;
+        while(j>=0 && arr[j]>key){
+            arr[j+1]=arr[j];
+            j--;
+        }
+        arr[j+1]=key;
+    }
+    for(int i=0;i<n;i++) cout<<arr[i]<<" ";
+}`,
+    quiz:[
+      {q:"Time complexity of insertion sort?", a:"Worst/average: O(n²). Best case (sorted input): O(n)."},
+      {q:"When is insertion sort preferred?", a:"For small or nearly-sorted arrays — it's efficient, stable, and in-place."},
+      {q:"Is insertion sort stable?", a:"Yes — equal elements maintain their original order."},
+    ]
+  },
+  {
+    num:10, name:"Second largest element",
+    badge:"array", badgeClass:"badge-blue",
+    algo:["Initialise largest=INT_MIN, second=INT_MIN","Loop through all elements","If element > largest: second=largest, then largest=element","Else if element > second and element != largest: second=element","Print second"],
+    code:`#include<iostream>
+#include<climits>
+using namespace std;
+int main(){
+    int n; cin>>n;
+    int arr[n];
+    for(int i=0;i<n;i++) cin>>arr[i];
+    int first=INT_MIN, second=INT_MIN;
+    for(int i=0;i<n;i++){
+        if(arr[i]>first){ second=first; first=arr[i]; }
+        else if(arr[i]>second && arr[i]!=first) second=arr[i];
+    }
+    if(second==INT_MIN) cout<<"No second largest";
+    else cout<<"Second largest: "<<second;
+}`,
+    quiz:[
+      {q:"Time complexity?", a:"O(n) — single pass through the array."},
+      {q:"What if all elements are the same?", a:"There is no second largest; we output an appropriate message."},
+      {q:"Why do we check arr[i] != first?", a:"To handle duplicates — we want the second distinct largest value."},
+    ]
+  },
+  {
+    num:11, name:"Singly linked list",
+    badge:"linked list", badgeClass:"badge-amber",
+    algo:["Define a Node struct with data and *next pointer","Create head pointer initialised to NULL","To insert at end: create new node, traverse to last node, set last->next = newNode","To display: traverse from head, print each node's data until NULL"],
+    code:`#include<iostream>
+using namespace std;
+struct Node{
+    int data;
+    Node* next;
+    Node(int d):data(d),next(nullptr){}
+};
+Node* head=nullptr;
+void insert(int val){
+    Node* newN=new Node(val);
+    if(!head){ head=newN; return; }
+    Node* tmp=head;
+    while(tmp->next) tmp=tmp->next;
+    tmp->next=newN;
+}
+void display(){
+    Node* tmp=head;
+    while(tmp){ cout<<tmp->data<<"->"; tmp=tmp->next; }
+    cout<<"NULL";
+}
+int main(){
+    insert(10); insert(20); insert(30);
+    display();
+}`,
+    quiz:[
+      {q:"What is a linked list?", a:"A linear data structure where elements (nodes) are linked via pointers. Each node contains data and a pointer to the next node."},
+      {q:"Advantage over array?", a:"Dynamic size — no need to declare size upfront. Insertion/deletion at front is O(1)."},
+      {q:"Disadvantage vs array?", a:"No random access — to reach element i you must traverse from head. Uses extra memory for pointers."},
+    ]
+  },
+  {
+    num:12, name:"Stack using array",
+    badge:"stack", badgeClass:"badge-amber",
+    algo:["Define array and top=-1","Push: check overflow (top==MAX-1), then arr[++top]=val","Pop: check underflow (top==-1), then return arr[top--]","Peek: return arr[top]","isEmpty: return top==-1"],
+    code:`#include<iostream>
+using namespace std;
+#define MAX 100
+int stack[MAX], top=-1;
+void push(int val){
+    if(top==MAX-1){ cout<<"Overflow\\n"; return; }
+    stack[++top]=val;
+}
+int pop(){
+    if(top==-1){ cout<<"Underflow\\n"; return -1; }
+    return stack[top--];
+}
+int peek(){ return stack[top]; }
+bool isEmpty(){ return top==-1; }
+int main(){
+    push(10); push(20); push(30);
+    cout<<"Top: "<<peek()<<"\\n";
+    cout<<"Popped: "<<pop()<<"\\n";
+    cout<<"Top now: "<<peek();
+}`,
+    quiz:[
+      {q:"What principle does a stack follow?", a:"LIFO — Last In, First Out. The last element pushed is the first to be popped."},
+      {q:"What is stack overflow?", a:"Attempting to push onto a full stack (top == MAX-1)."},
+      {q:"What is stack underflow?", a:"Attempting to pop from an empty stack (top == -1)."},
+      {q:"Applications of stack?", a:"Function call management, expression evaluation, undo operations, DFS traversal."},
+    ]
+  },
+  {
+    num:13, name:"Push and Pop operations",
+    badge:"stack", badgeClass:"badge-amber",
+    algo:["PUSH: if top < MAX-1, increment top and place element at stack[top]","POP: if top >= 0, return stack[top] and decrement top","Display stack: print all elements from top down to 0"],
+    code:`#include<iostream>
+using namespace std;
+#define MAX 5
+int stack[MAX], top=-1;
+void push(int val){
+    if(top>=MAX-1){ cout<<"Stack Full\\n"; return; }
+    stack[++top]=val;
+    cout<<"Pushed "<<val<<"\\n";
+}
+void pop(){
+    if(top<0){ cout<<"Stack Empty\\n"; return; }
+    cout<<"Popped "<<stack[top--]<<"\\n";
+}
+void display(){
+    cout<<"Stack (top->bottom): ";
+    for(int i=top;i>=0;i--) cout<<stack[i]<<" ";
+    cout<<"\\n";
+}
+int main(){
+    push(5); push(10); push(15);
+    display();
+    pop();
+    display();
+}`,
+    quiz:[
+      {q:"Difference between push and enqueue?", a:"Push adds to a stack (LIFO). Enqueue adds to a queue (FIFO)."},
+      {q:"Time complexity of push and pop?", a:"Both O(1) — constant time, no traversal needed."},
+    ]
+  },
+  {
+    num:14, name:"Queue using array",
+    badge:"queue", badgeClass:"badge-amber",
+    algo:["Maintain front=-1 and rear=-1","Enqueue: if rear==MAX-1, overflow; else if front==-1 set front=0, then arr[++rear]=val","Dequeue: if front==-1, underflow; else return arr[front++]; if front>rear reset to empty","Display: print arr[front..rear]"],
+    code:`#include<iostream>
+using namespace std;
+#define MAX 100
+int queue[MAX], front=-1, rear=-1;
+void enqueue(int val){
+    if(rear==MAX-1){ cout<<"Queue Full\\n"; return; }
+    if(front==-1) front=0;
+    queue[++rear]=val;
+}
+int dequeue(){
+    if(front==-1||front>rear){ cout<<"Queue Empty\\n"; return -1; }
+    return queue[front++];
+}
+void display(){
+    cout<<"Queue: ";
+    for(int i=front;i<=rear;i++) cout<<queue[i]<<" ";
+    cout<<"\\n";
+}
+int main(){
+    enqueue(10); enqueue(20); enqueue(30);
+    display();
+    cout<<"Dequeued: "<<dequeue()<<"\\n";
+    display();
+}`,
+    quiz:[
+      {q:"What principle does a queue follow?", a:"FIFO — First In, First Out. The first element inserted is the first removed."},
+      {q:"Real-world example of a queue?", a:"Printer job queue, ticketing counter, CPU scheduling, BFS traversal."},
+      {q:"What is a circular queue?", a:"A queue where the rear wraps around to the front using modulo, solving the wasted-space problem of a linear queue."},
+    ]
+  },
+  {
+    num:15, name:"Enqueue and Dequeue",
+    badge:"queue", badgeClass:"badge-amber",
+    algo:["ENQUEUE: check if rear == MAX-1 (full); if not, increment rear and insert element","DEQUEUE: check if front > rear or front == -1 (empty); if not, return element at front and increment front","Display remaining elements from front to rear"],
+    code:`#include<iostream>
+using namespace std;
+#define MAX 5
+int q[MAX], front=0, rear=0;
+bool isEmpty(){ return front==rear; }
+bool isFull(){ return rear==MAX; }
+void enqueue(int val){
+    if(isFull()){ cout<<"Full\\n"; return; }
+    q[rear++]=val;
+    cout<<"Enqueued "<<val<<"\\n";
+}
+void dequeue(){
+    if(isEmpty()){ cout<<"Empty\\n"; return; }
+    cout<<"Dequeued "<<q[front++]<<"\\n";
+}
+void display(){
+    cout<<"Queue: ";
+    for(int i=front;i<rear;i++) cout<<q[i]<<" ";
+    cout<<"\\n";
+}
+int main(){
+    enqueue(1); enqueue(2); enqueue(3);
+    display();
+    dequeue();
+    display();
+}`,
+    quiz:[
+      {q:"Difference between dequeue and Deque?", a:"Dequeue (operation) removes from a queue's front. Deque (data structure) is a double-ended queue allowing insert/remove at both ends."},
+      {q:"Time complexity of enqueue and dequeue?", a:"Both O(1) — constant time."},
+    ]
+  },
+];
+
+let current=0, tab='code';
+
+function switchTab(t){
+  tab=t;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderDetail(current);
+}
+
+function pickRandom(){
+  const r=Math.floor(Math.random()*15);
+  selectTopic(r);
+}
+
+function selectTopic(i){
+  current=i;
+  document.querySelectorAll('.topic-card').forEach((c,j)=>{
+    c.classList.toggle('selected',j===i);
+  });
+  renderDetail(i);
+}
+
+function renderDetail(i){
+  const t=topics[i];
+  let html=`<div class="detail-box">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+      <span class="detail-title" style="margin:0">Topic ${t.num}: ${t.name}</span>
+      <span class="badge ${t.badgeClass}">${t.badge}</span>
+    </div>`;
+
+  if(tab==='code'){
+    html+=`<div class="sub-label">C++ Code</div>
+    <div class="code-block">${t.code.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  } else if(tab==='algo'){
+    html+=`<div class="sub-label">Step-by-step algorithm</div>
+    <ul class="algo-list">`;
+    t.algo.forEach(s=>{ html+=`<li>${s}</li>`; });
+    html+=`</ul>`;
+  } else {
+    html+=`<div class="sub-label">Quiz Q&A (tap to reveal answer)</div>`;
+    t.quiz.forEach((q,qi)=>{
+      html+=`<div class="quiz-q" id="qq${i}_${qi}">
+        <div class="q-text" onclick="toggleQ('qq${i}_${qi}')">
+          <strong>${q.q}</strong>
+          <i class="ti ti-chevron-down" aria-hidden="true" style="font-size:16px;color:var(--color-text-secondary)"></i>
+        </div>
+        <div class="quiz-a">${q.a}</div>
+      </div>`;
+    });
+  }
+
+  html+=`</div>`;
+  document.getElementById('detail').innerHTML=html;
+}
+
+function toggleQ(id){
+  document.getElementById(id).classList.toggle('open');
+}
+
+function buildGrid(){
+  const g=document.getElementById('grid');
+  topics.forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.className='topic-card'+(i===0?' selected':'');
+    d.innerHTML=`<div class="topic-num">${t.num}</div><div class="topic-name">${t.name}</div>`;
+    d.onclick=()=>selectTopic(i);
+    g.appendChild(d);
+  });
+}
+
+buildGrid();
+renderDetail(0);
+</script>
